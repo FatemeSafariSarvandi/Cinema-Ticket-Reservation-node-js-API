@@ -5,28 +5,17 @@ const userRoutes = require("./routes/userRoutes");
 const movieRoutes = require("./routes/movieRoutes");
 const showtimeRoutes = require("./routes/showtimeRoutes");
 const seatRoutes = require("./routes/seatRoutes");
-// const reservationRoutes = require("./routes/reservationRoutes");
-
-// var path = require('path');
-// var cookieParser = require('cookie-parser');
-// var logger = require('morgan');
+const reservationRoutes = require("./routes/reservationRoutes");
 
 const app = express();
-
-// app.use(logger('dev'));
 app.use(express.json());
-// app.use(express.urlencoded({ extended: false }));
-// app.use(cookieParser());
-// app.use(express.static(path.join(__dirname, 'public')));
-
-// module.exports = app;
 
 // all routes will be here
 app.use("/api/users", userRoutes);
 app.use("/api/movies", movieRoutes);
 app.use("/api/showtimes", showtimeRoutes);
 app.use("/api/seats", seatRoutes);
-// app.use("/api/reservations", reservationRoutes);
+app.use("/api/reservations", reservationRoutes);
 
 app.get("/", (req, res) => {
     res.status(200).json({

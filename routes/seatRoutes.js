@@ -21,6 +21,39 @@ router.get("/showtime/:showtimeId", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+//update seat
+// router.put("/:id", async (req, res) => {
+//     const { id } = req.params;
+//     const transaction = await seat.sequelize.transaction();
+
+//     try {
+//         // بررسی وضعیت صندلی و قفل کردن آن
+//         const availableSeat = await seat.findOne({
+//             where: { id, status: "available" },
+//             lock: transaction.LOCK.UPDATE,
+//             transaction,
+//         });
+
+//         if (!availableSeat) {
+//             await transaction.rollback();
+//             return res
+//                 .status(400)
+//                 .json({ error: "Seat is not available for reservation" });
+//         }
+
+//         await seat.update(
+//             { status: "reserved" },
+//             { where: { id }, transaction }
+//         );
+
+//         await transaction.commit();
+
+//         res.json({ message: "Seat successfully reserved", seat });
+//     } catch (error) {
+//         await transaction.rollback();
+//         res.status(500).json({ error: error.message });
+//     }
+// });
 
 //create seats for specific showtime
 router.post("/", authMiddleware, async (req, res) => {
