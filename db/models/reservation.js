@@ -12,12 +12,12 @@ const reservation = sequelize.define(
             autoIncrement: true,
             primaryKey: true,
         },
-        userId: {
-            type: DataTypes.INTEGER,
+        userName: {
+            type: DataTypes.STRING,
             allowNull: false,
             references: {
                 model: user,
-                key: "id",
+                key: "userName",
             },
             onDelete: "CASCADE",
         },

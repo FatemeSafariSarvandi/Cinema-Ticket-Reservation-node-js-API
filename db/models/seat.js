@@ -20,8 +20,13 @@ const seat = sequelize.define(
             onDelete: "CASCADE",
         },
         seatNumber: {
-            type: DataTypes.STRING,
+            type: DataTypes.INTEGER,
             allowNull: false,
+            validate: {
+                min: 1,
+                max: 100,
+                isInt: true,
+            },
         },
         status: {
             type: DataTypes.ENUM("available", "reserved"),

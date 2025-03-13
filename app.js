@@ -4,7 +4,8 @@ const sequelize = require("./config/database");
 const userRoutes = require("./routes/userRoutes");
 const movieRoutes = require("./routes/movieRoutes");
 const showtimeRoutes = require("./routes/showtimeRoutes");
-const reservationRoutes = require("./routes/reservationRoutes");
+const seatRoutes = require("./routes/seatRoutes");
+// const reservationRoutes = require("./routes/reservationRoutes");
 
 // var path = require('path');
 // var cookieParser = require('cookie-parser');
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use("/api/users", userRoutes);
 app.use("/api/movies", movieRoutes);
 app.use("/api/showtimes", showtimeRoutes);
+app.use("/api/seats", seatRoutes);
 // app.use("/api/reservations", reservationRoutes);
 
 app.get("/", (req, res) => {
@@ -39,8 +41,6 @@ app.use("*", (req, res, next) => {
         message: "Route not found",
     });
 });
-
-// app.use(globalErrorHandler);
 
 const PORT = process.env.APP_PORT || 4000;
 
