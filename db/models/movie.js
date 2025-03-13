@@ -14,7 +14,16 @@ const movie = sequelize.define(
             allowNull: false,
         },
         genre: {
-            type: DataTypes.STRING,
+            type: DataTypes.ENUM(
+                "Comedic",
+                "Drama",
+                "Action",
+                "Romance",
+                "Melodrama",
+                "Mystery",
+                "Sci-Fi",
+                "Horror"
+            ),
             allowNull: false,
         },
         duration: {

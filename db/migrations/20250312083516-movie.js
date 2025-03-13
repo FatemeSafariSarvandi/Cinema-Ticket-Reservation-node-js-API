@@ -14,7 +14,16 @@ module.exports = {
                 allowNull: false,
             },
             genre: {
-                type: Sequelize.STRING,
+                type: Sequelize.ENUM(
+                    "Comedic",
+                    "Drama",
+                    "Action",
+                    "Romance",
+                    "Melodrama",
+                    "Mystery",
+                    "Sci-Fi",
+                    "Horror"
+                ),
                 allowNull: false,
             },
             duration: {

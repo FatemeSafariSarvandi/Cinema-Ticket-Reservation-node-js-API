@@ -28,7 +28,7 @@ app.use(express.json());
 
 // all routes will be here
 app.use("/api/users", userRoutes);
-// app.use("/api/movies", movieRoutes);
+app.use("/api/movies", movieRoutes);
 // app.use("/api/showtimes", showtimeRoutes);
 // app.use("/api/reservations", reservationRoutes);
 
