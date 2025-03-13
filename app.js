@@ -10,9 +10,6 @@ const reservationRoutes = require("./routes/reservationRoutes");
 // var cookieParser = require('cookie-parser');
 // var logger = require('morgan');
 
-// var indexRouter = require('./routes/index');
-// var usersRouter = require('./routes/users');
-
 const app = express();
 
 // app.use(logger('dev'));
@@ -21,15 +18,12 @@ app.use(express.json());
 // app.use(cookieParser());
 // app.use(express.static(path.join(__dirname, 'public')));
 
-// app.use('/', indexRouter);
-// app.use('/users', usersRouter);
-
 // module.exports = app;
 
 // all routes will be here
 app.use("/api/users", userRoutes);
 app.use("/api/movies", movieRoutes);
-// app.use("/api/showtimes", showtimeRoutes);
+app.use("/api/showtimes", showtimeRoutes);
 // app.use("/api/reservations", reservationRoutes);
 
 app.get("/", (req, res) => {
@@ -53,11 +47,4 @@ const PORT = process.env.APP_PORT || 4000;
 app.listen(PORT, async () => {
     console.log("Server up and running", PORT);
     await sequelize;
-    // try {
-    //     // Sync models with database
-    //     await sequelize.sync({ alter: true });
-    //     console.log("Database synchronized successfully");
-    // } catch (error) {
-    //     console.error("!!! Unable to connect to the database:", error);
-    // }
 });

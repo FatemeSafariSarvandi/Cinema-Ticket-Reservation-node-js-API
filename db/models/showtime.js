@@ -24,7 +24,7 @@ const showtime = sequelize.define(
             allowNull: false,
         },
         time: {
-            type: DataTypes.TIME,
+            type: DataTypes.ENUM("10", "12", "14", "16", "18", "20", "22"),
             allowNull: false,
         },
     },

@@ -3,33 +3,33 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable("seat", {
+        await queryInterface.createTable("showtime", {
             id: {
                 type: Sequelize.INTEGER,
                 autoIncrement: true,
                 primaryKey: true,
             },
-            showtimeId: {
+            movieId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: "showtime",
+                    model: "movie",
                     key: "id",
                 },
                 onDelete: "CASCADE",
             },
-            seatNumber: {
-                type: Sequelize.STRING,
+            date: {
+                type: Sequelize.DATEONLY,
                 allowNull: false,
             },
-            status: {
-                type: Sequelize.ENUM("available", "reserved"),
-                defaultValue: "available",
+            time: {
+                type: Sequelize.ENUM("10", "12", "14", "16", "18", "20", "22"),
+                allowNull: false,
             },
         });
     },
 
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable("seat");
+        await queryInterface.dropTable("showtime");
     },
 };
