@@ -7,14 +7,14 @@ const router = express.Router();
 
 // Get movie showtimes
 router.get("/:movieId", async (req, res) => {
-    try {
-        const { movieId } = req.params;
-        if (!movieId || isNaN(Number(movieId))) {
-            return res
-                .status(400)
-                .json({ error: "Invalid movieId. It must be a valid number." });
-        }
+    const { movieId } = req.params;
+    if (!movieId || isNaN(Number(movieId))) {
+        return res
+            .status(400)
+            .json({ error: "Invalid movieId. It must be a valid number." });
+    }
 
+    try {
         const showtimes = await showtime.findAll({
             where: { movieId: movieId },
         });
@@ -32,14 +32,14 @@ router.get("/:movieId", async (req, res) => {
 
 // Get movie showtimes by time
 router.get("/time/:time", async (req, res) => {
-    try {
-        const { time } = req.params;
-        if (!time || isNaN(Number(time))) {
-            return res
-                .status(400)
-                .json({ error: "Invalid time. It must be a valid number." });
-        }
+    const { time } = req.params;
+    if (!time || isNaN(Number(time))) {
+        return res
+            .status(400)
+            .json({ error: "Invalid time. It must be a valid number." });
+    }
 
+    try {
         const showtimes = await showtime.findAll({
             where: { time: time },
         });
@@ -78,6 +78,17 @@ router.post("/", authMiddleware, async (req, res) => {
 
     const { movieId, date, time } = req.body;
 
+    // Validate input data
+    if (
+        !movieId ||
+        !date ||
+        !time ||
+        isNaN(Number(movieId)) ||
+        isNaN(Number(time))
+    ) {
+        return res.status(400).json({ error: "Invalid input data" });
+    }
+
     try {
         //! When using `new Date` instead of the time value, it returns `invalid`, so I had to use `dayjs`.
         // const showtimeDateTime = new Date(`${date}T${time}:00:00`);
@@ -85,7 +96,7 @@ router.post("/", authMiddleware, async (req, res) => {
         const currentTime = new Date();
         if (currentTime >= showtimeDateTime) {
             return res.status(400).json({
-                error: "Cannot create showtime before current",
+                error: "Cannot create showtime before current time",
             });
         }
 
@@ -110,8 +121,16 @@ router.post("/", authMiddleware, async (req, res) => {
 router.delete("/:id", authMiddleware, async (req, res) => {
     if (req.user.role !== "admin")
         return res.status(403).json({ error: "Unauthorized" });
+
+    const { id } = req.params;
+
+    // Validate input data
+    if (!id || isNaN(Number(id))) {
+        return res.status(400).json({ error: "Invalid input data" });
+    }
+
     try {
-        const deletedshowtime = await showtime.findByPk(req.params.id);
+        const deletedshowtime = await showtime.findByPk(id);
         if (!deletedshowtime)
             return res.status(404).json({ error: "showtime not found" });
 
