@@ -3,7 +3,6 @@ const Reservation = require("../db/models/reservation");
 const seat = require("../db/models/seat");
 const Showtime = require("../db/models/showtime");
 const authMiddleware = require("../middleware/authMiddleware");
-const { Op } = require("sequelize");
 const router = express.Router();
 
 // Create a reservation
@@ -27,6 +26,24 @@ router.post("/", authMiddleware, async (req, res) => {
             return res
                 .status(400)
                 .json({ error: "Seat is not available for reservation" });
+        }
+
+        // Get relevant showtime information
+        const showtime = await Showtime.findByPk(showtimeId);
+        if (!showtime) {
+            return res.status(404).json({ error: "Showtime not found" });
+        }
+
+        //Check if the current time is before the timeshow start time
+        const currentTime = new Date();
+        const showtimeDateTime = new Date(
+            `${showtime.date}T${showtime.time}:00:00`
+        );
+
+        if (currentTime >= showtimeDateTime) {
+            return res.status(400).json({
+                error: "Cannot reservation after showtime has started",
+            });
         }
 
         // Update seat status to "reserved"
@@ -77,18 +94,14 @@ router.delete("/:id", authMiddleware, async (req, res) => {
         const showtimeDateTime = new Date(
             `${showtime.date}T${showtime.time}:00:00`
         );
-        const localTime = new Date(
-            showtimeDateTime.getTime() -
-                showtimeDateTime.getTimezoneOffset() * 60000
-        );
 
-        if (currentTime >= localTime.toISOString()) {
+        if (currentTime >= showtimeDateTime) {
             return res.status(400).json({
                 error: "Cannot cancel reservation after showtime has started",
             });
         }
 
-        // delete reservation
+        delete reservation;
         await reservation.destroy();
 
         //Change seat status to "available"
