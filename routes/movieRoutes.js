@@ -49,7 +49,7 @@ router.get("/genre/:genre", async (req, res) => {
 });
 
 // Add Movie (Admin Only)
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, async (req, res, next) => {
     if (req.user.role !== "admin")
         return res.status(403).json({ error: "Unauthorized" });
 
@@ -63,7 +63,7 @@ router.post("/", authMiddleware, async (req, res) => {
         });
         res.status(201).json(newMovie);
     } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
+        next(error);
     }
 });
 

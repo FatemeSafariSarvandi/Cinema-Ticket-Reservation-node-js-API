@@ -92,6 +92,8 @@ router.delete("/:id", authMiddleware, async (req, res) => {
         return res.status(400).json({ error: "Invalid input data" });
     }
 
+    const transaction = await seat.sequelize.transaction();
+
     try {
         // Get reservation information
         const reservation = await Reservation.findByPk(id);
@@ -125,11 +127,12 @@ router.delete("/:id", authMiddleware, async (req, res) => {
             { status: "available" },
             { where: { id: reservation.seatId } }
         );
-
+        await transaction.commit();
         res.json({
             message: "Reservation cancelled and seat is now available",
         });
     } catch (error) {
+        await transaction.rollback();
         res.status(500).json({ error: "Internal server error" });
     }
 });

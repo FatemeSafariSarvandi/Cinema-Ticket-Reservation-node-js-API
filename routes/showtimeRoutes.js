@@ -6,7 +6,7 @@ const dayjs = require("dayjs");
 const router = express.Router();
 
 // Get movie showtimes
-router.get("/:movieId", async (req, res) => {
+router.get("/:movieId", async (req, res, next) => {
     const { movieId } = req.params;
     if (!movieId || isNaN(Number(movieId))) {
         return res
@@ -26,12 +26,12 @@ router.get("/:movieId", async (req, res) => {
         res.json(showtimes);
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: "Internal server error" });
+        next(error);
     }
 });
 
 // Get movie showtimes by time
-router.get("/time/:time", async (req, res) => {
+router.get("/time/:time", async (req, res, next) => {
     const { time } = req.params;
     if (!time || isNaN(Number(time))) {
         return res
@@ -50,12 +50,12 @@ router.get("/time/:time", async (req, res) => {
         }
         res.json(showtimes);
     } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
+        next(error);
     }
 });
 
 // Get movie showtimes by date
-router.get("/date/:date", async (req, res) => {
+router.get("/date/:date", async (req, res, next) => {
     try {
         const showtimes = await showtime.findAll({
             where: { date: req.params.date },
@@ -67,12 +67,12 @@ router.get("/date/:date", async (req, res) => {
         }
         res.json(showtimes);
     } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
+        next(error);
     }
 });
 
 //Add a showtime (admin only)
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, async (req, res, next) => {
     if (req.user.role !== "admin")
         return res.status(403).json({ error: "Unauthorized" });
 
@@ -113,7 +113,7 @@ router.post("/", authMiddleware, async (req, res) => {
         const newShowtime = await showtime.create({ movieId, date, time });
         res.status(201).json(newShowtime);
     } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
+        next(error);
     }
 });
 
