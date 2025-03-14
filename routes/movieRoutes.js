@@ -6,16 +6,28 @@ const router = express.Router();
 
 // Get Movie List
 router.get("/", async (req, res) => {
-    const movies = await movie.findAll();
-    res.json(movies);
+    try {
+        const movies = await movie.findAll();
+        res.json(movies);
+    } catch (error) {
+        res.status(500).json({ error: "Internal server error" });
+    }
 });
 
 // Get Movie Details
 router.get("/:id", async (req, res) => {
-    const movieDetails = await movie.findByPk(req.params.id);
-    if (!movieDetails)
-        return res.status(404).json({ error: "Movie not found" });
-    res.json(movieDetails);
+    const { id } = req.params;
+    if (!id || isNaN(Number(id))) {
+        return res.status(400).json({ error: "Invalid id." });
+    }
+    try {
+        const movieDetails = await movie.findByPk(id);
+        if (!movieDetails)
+            return res.status(404).json({ error: "Movie not found" });
+        res.json(movieDetails);
+    } catch (error) {
+        res.status(500).json({ error: "Internal server error" });
+    }
 });
 
 // Get list of Movies by genre
@@ -32,7 +44,7 @@ router.get("/genre/:genre", async (req, res) => {
 
         res.json(movies);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Internal server error" });
     }
 });
 
@@ -51,7 +63,7 @@ router.post("/", authMiddleware, async (req, res) => {
         });
         res.status(201).json(newMovie);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(500).json({ error: "Internal server error" });
     }
 });
 
@@ -60,12 +72,21 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     if (req.user.role !== "admin")
         return res.status(403).json({ error: "Unauthorized" });
 
-    const deletedMovie = await movie.findByPk(req.params.id);
-    if (!deletedMovie)
-        return res.status(404).json({ error: "Movie not found" });
+    const { id } = req.params;
+    if (!id || isNaN(Number(id))) {
+        return res.status(400).json({ error: "Invalid id." });
+    }
 
-    await deletedMovie.destroy();
-    res.json({ message: "The movie was successfully deleted." });
+    try {
+        const deletedMovie = await movie.findByPk(id);
+        if (!deletedMovie)
+            return res.status(404).json({ error: "Movie not found" });
+
+        await deletedMovie.destroy();
+        res.json({ message: "The movie was successfully deleted." });
+    } catch (error) {
+        res.status(500).json({ error: "Internal server error" });
+    }
 });
 
 module.exports = router;
