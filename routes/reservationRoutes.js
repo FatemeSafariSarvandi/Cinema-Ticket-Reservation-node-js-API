@@ -8,6 +8,17 @@ const router = express.Router();
 // Create a reservation
 router.post("/", authMiddleware, async (req, res) => {
     const { showtimeId, seatId } = req.body;
+
+    // Validate input data
+    if (
+        !showtimeId ||
+        !seatId ||
+        isNaN(Number(showtimeId)) ||
+        isNaN(Number(seatId))
+    ) {
+        return res.status(400).json({ error: "Invalid input data" });
+    }
+
     const transaction = await seat.sequelize.transaction(); //Start transaction
     try {
         // Checking that the seat is in the "available" state and locked
@@ -66,7 +77,7 @@ router.post("/", authMiddleware, async (req, res) => {
         });
     } catch (error) {
         await transaction.rollback(); //In case of an error, we restore the database to its previous state.
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Internal server error" });
     }
 });
 
@@ -75,6 +86,11 @@ module.exports = router;
 // Cancel reservation
 router.delete("/:id", authMiddleware, async (req, res) => {
     const { id } = req.params;
+
+    // Validate input data
+    if (!id || isNaN(Number(id))) {
+        return res.status(400).json({ error: "Invalid input data" });
+    }
 
     try {
         // Get reservation information
@@ -114,7 +130,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
             message: "Reservation cancelled and seat is now available",
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Internal server error" });
     }
 });
 
