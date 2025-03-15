@@ -1,89 +1,74 @@
 const movie = require("../db/models/movie");
+const AppError = require("../utilities/appError");
+const { tryCatchHandler } = require("../utilities/tryCatchHandler");
 
 // Get Movie List
-const getMovies = async (req, res, next) => {
-    try {
-        const movies = await movie.findAll();
-        res.json(movies);
-    } catch (error) {
-        next(error);
-    }
-};
+const getMovies = tryCatchHandler(async (req, res) => {
+    const movies = await movie.findAll();
+    res.status(200).json(movies);
+});
 
 // Get Movie Details
-const getMovieDetails = async (req, res) => {
+const getMovieDetails = tryCatchHandler(async (req, res) => {
     const { id } = req.params;
     if (!id || isNaN(Number(id))) {
-        return res.status(400).json({ error: "Invalid id." });
+        throw new AppError("INVALID_ID", "Invalid id", 400);
     }
-    try {
-        const movieDetails = await movie.findByPk(id);
-        if (!movieDetails)
-            return res.status(404).json({ error: "Movie not found" });
-        res.json(movieDetails);
-    } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
-    }
-};
+    const movieDetails = await movie.findByPk(id);
+    if (!movieDetails)
+        throw new AppError("MOVIE_NOT_FOUND", "Movie not found", 404);
+    res.status(200).json(movieDetails);
+});
 
 //Get list of Movies by genre
-const getMoviesByGenre = async (req, res) => {
-    try {
-        const { genre } = req.params;
-        const movies = await movie.findAll({ where: { genre } });
+const getMoviesByGenre = tryCatchHandler(async (req, res) => {
+    const { genre } = req.params;
+    const movies = await movie.findAll({ where: { genre } });
 
-        if (movies.length === 0) {
-            return res
-                .status(404)
-                .json({ message: "No movies found for this genre" });
-        }
-
-        res.json(movies);
-    } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
+    if (movies.length === 0) {
+        throw new AppError(
+            "MOVIE_NOT_FOUND",
+            "No movies found for this genre",
+            404
+        );
     }
-};
+
+    res.status(202).json(movies);
+});
 
 // Add Movie (Admin Only)
-const addMovie = async (req, res, next) => {
+const addMovie = tryCatchHandler(async (req, res) => {
     if (req.user.role !== "admin")
-        return res.status(403).json({ error: "Unauthorized" });
+        throw new AppError("UNAUTHORIZED", "Unauthorized", 403);
 
     const { title, genre, duration, description } = req.body;
-    try {
-        const newMovie = await movie.create({
-            title,
-            genre,
-            duration,
-            description,
-        });
-        res.status(201).json(newMovie);
-    } catch (error) {
-        next(error);
-    }
-};
+
+    const newMovie = await movie.create({
+        title,
+        genre,
+        duration,
+        description,
+    });
+    res.status(201).json(newMovie);
+});
 
 // Delete Movie (Admin Only)
-const deleteMovie = async (req, res) => {
+const deleteMovie = tryCatchHandler(async (req, res) => {
     if (req.user.role !== "admin")
-        return res.status(403).json({ error: "Unauthorized" });
+        throw new AppError("UNAUTHORIZED", "Unauthorized", 403);
 
     const { id } = req.params;
     if (!id || isNaN(Number(id))) {
-        return res.status(400).json({ error: "Invalid id." });
+        throw new AppError("INVALID_ID", "Invalid id", 400);
     }
 
-    try {
-        const deletedMovie = await movie.findByPk(id);
-        if (!deletedMovie)
-            return res.status(404).json({ error: "Movie not found" });
+    const deletedMovie = await movie.findByPk(id);
+    if (!deletedMovie)
+        throw new AppError("MOVIE_NOT_FOUND", "Movie not found", 404);
 
-        await deletedMovie.destroy();
-        res.json({ message: "The movie was successfully deleted." });
-    } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
-    }
-};
+    await deletedMovie.destroy();
+    res.status(204).json({ message: "The movie was successfully deleted." });
+});
 
 module.exports = {
     getMovies,

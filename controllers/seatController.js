@@ -1,32 +1,32 @@
 const seat = require("../db/models/seat");
+const AppError = require("../utilities/appError");
+const { tryCatchHandler } = require("../utilities/tryCatchHandler");
 
 //Get a list of seats for a specific showtime
-const getListOfSeats = async (req, res) => {
+const getListOfSeats = tryCatchHandler(async (req, res) => {
     const { showtimeId } = req.params;
     // Validate input data
     if (!showtimeId || isNaN(Number(showtimeId))) {
-        return res.status(400).json({ error: "Invalid input data" });
+        throw new AppError("INVALID_INPUT", "Invalid input data", 400);
     }
 
-    try {
-        const seats = await seat.findAll({ where: { showtimeId } });
+    const seats = await seat.findAll({ where: { showtimeId } });
 
-        if (seats.length === 0) {
-            return res
-                .status(404)
-                .json({ message: "No seats found for this showtime" });
-        }
-
-        res.json(seats);
-    } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
+    if (seats.length === 0) {
+        throw new AppError(
+            "SEAT_NOT_FOUND",
+            "No seats found for this showtime",
+            404
+        );
     }
-};
+
+    res.status(200).json(seats);
+});
 
 //create seats
-const createSeats = async (req, res) => {
+const createSeats = tryCatchHandler(async (req, res) => {
     if (req.user.role !== "admin")
-        return res.status(403).json({ error: "Unauthorized" });
+        throw new AppError("UNAUTHORIZED", "Unauthorized", 403);
 
     const { showtimeId, seatNumber } = req.body;
     // Validate input data
@@ -36,59 +36,53 @@ const createSeats = async (req, res) => {
         isNaN(Number(showtimeId)) ||
         isNaN(Number(seatNumber))
     ) {
-        return res.status(400).json({ error: "Invalid input data" });
+        throw new AppError("INVALID_INPUT", "Invalid input data", 400);
     }
 
-    try {
-        const showtimeSeats = await seat.findAll({
-            where: { showtimeId: showtimeId },
-        });
-        if (showtimeSeats.length !== 0) {
-            return res.status(400).json({
-                error: "Seats have already been created for this showtime.",
-            });
-        }
-
-        //! The number of seats in the cinema is fixed, but for ease of use with the API, we get the number of seats in req.
-        const seats = [];
-        var newseatNumber = 100;
-        if (seatNumber < 100) newseatNumber = seatNumber;
-        for (let i = 1; i <= newseatNumber; i++) {
-            seats.push({ showtimeId: showtimeId, seatNumber: i });
-        }
-        await seat.bulkCreate(seats);
-
-        res.status(201).json({
-            message: `Showtime created with ${newseatNumber} seats`,
-        });
-    } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
+    const showtimeSeats = await seat.findAll({
+        where: { showtimeId: showtimeId },
+    });
+    if (showtimeSeats.length !== 0) {
+        throw new AppError(
+            "SEAT_CONFLICT",
+            "Seats have already been created for this showtime.",
+            409
+        );
     }
-};
+
+    //! The number of seats in the cinema is fixed, but for ease of use with the API, we get the number of seats in req.
+    const seats = [];
+    var newseatNumber = 100;
+    if (seatNumber < 100) newseatNumber = seatNumber;
+    for (let i = 1; i <= newseatNumber; i++) {
+        seats.push({ showtimeId: showtimeId, seatNumber: i });
+    }
+    await seat.bulkCreate(seats);
+
+    res.status(201).json({
+        message: `Showtime created with ${newseatNumber} seats`,
+    });
+});
 
 // delete all seats for specific showtime
-const deleteSeats = async (req, res) => {
+const deleteSeats = tryCatchHandler(async (req, res) => {
     if (req.user.role !== "admin")
-        return res.status(403).json({ error: "Unauthorized" });
+        throw new AppError("UNAUTHORIZED", "Unauthorized", 403);
 
     const { id } = req.params;
     // Validate input data
     if (!id || isNaN(Number(id))) {
-        return res.status(400).json({ error: "Invalid input data" });
+        throw new AppError("INVALID_ID", "Invalid id", 400);
     }
 
-    try {
-        const seats = await seat.findAll({
-            where: { showtimeId: id },
-        });
-        if (seats.length === 0)
-            return res.status(404).json({ error: "showtimeId not found" });
+    const seats = await seat.findAll({
+        where: { showtimeId: id },
+    });
+    if (seats.length === 0)
+        throw new AppError("SEAT_NOT_FOUND", "showtimeId not found", 404);
 
-        await seat.destroy({ where: { showtimeId: id } });
-        res.json({ message: "seats were successfully deleted." });
-    } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
-    }
-};
+    await seat.destroy({ where: { showtimeId: id } });
+    res.status(201).json({ message: "seats were successfully deleted." });
+});
 
 module.exports = { getListOfSeats, createSeats, deleteSeats };
