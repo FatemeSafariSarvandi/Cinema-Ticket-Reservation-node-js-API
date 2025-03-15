@@ -1,6 +1,4 @@
-const express = require("express");
 const movie = require("../db/models/movie");
-const authMiddleware = require("../middleware/authMiddleware");
 
 // Get Movie List
 const getMovies = async (req, res, next) => {
