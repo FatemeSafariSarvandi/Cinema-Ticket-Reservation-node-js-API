@@ -1,5 +1,4 @@
 const express = require("express");
-const seat = require("../db/models/seat");
 const authMiddleware = require("../middleware/authMiddleware");
 const {
     getListOfSeats,
