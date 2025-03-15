@@ -1,98 +1,20 @@
 const express = require("express");
 const seat = require("../db/models/seat");
 const authMiddleware = require("../middleware/authMiddleware");
-
+const {
+    getListOfSeats,
+    createSeats,
+    deleteSeats,
+} = require("../controllers/seatController");
 const router = express.Router();
 
 //Get a list of seats for a specific showtime
-router.get("/showtime/:showtimeId", async (req, res) => {
-    const { showtimeId } = req.params;
-    // Validate input data
-    if (!showtimeId || isNaN(Number(showtimeId))) {
-        return res.status(400).json({ error: "Invalid input data" });
-    }
-
-    try {
-        const seats = await seat.findAll({ where: { showtimeId } });
-
-        if (seats.length === 0) {
-            return res
-                .status(404)
-                .json({ message: "No seats found for this showtime" });
-        }
-
-        res.json(seats);
-    } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
-    }
-});
+router.get("/showtime/:showtimeId", getListOfSeats);
 
 //create seats for specific showtime
-router.post("/", authMiddleware, async (req, res) => {
-    if (req.user.role !== "admin")
-        return res.status(403).json({ error: "Unauthorized" });
-
-    const { showtimeId, seatNumber } = req.body;
-    // Validate input data
-    if (
-        !showtimeId ||
-        !seatNumber ||
-        isNaN(Number(showtimeId)) ||
-        isNaN(Number(seatNumber))
-    ) {
-        return res.status(400).json({ error: "Invalid input data" });
-    }
-
-    try {
-        const showtimeSeats = await seat.findAll({
-            where: { showtimeId: showtimeId },
-        });
-        if (showtimeSeats.length !== 0) {
-            return res.status(400).json({
-                error: "Seats have already been created for this showtime.",
-            });
-        }
-
-        //! The number of seats in the cinema is fixed, but for ease of use with the API, we get the number of seats in req.
-        const seats = [];
-        var newseatNumber = 100;
-        if (seatNumber < 100) newseatNumber = seatNumber;
-        for (let i = 1; i <= newseatNumber; i++) {
-            seats.push({ showtimeId: showtimeId, seatNumber: i });
-        }
-        await seat.bulkCreate(seats);
-
-        res.status(201).json({
-            message: `Showtime created with ${newseatNumber} seats`,
-        });
-    } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
-    }
-});
+router.post("/", authMiddleware, createSeats);
 
 // delete all seats for specific showtime
-router.delete("/showtime/:id", authMiddleware, async (req, res) => {
-    if (req.user.role !== "admin")
-        return res.status(403).json({ error: "Unauthorized" });
-
-    const { id } = req.params;
-    // Validate input data
-    if (!id || isNaN(Number(id))) {
-        return res.status(400).json({ error: "Invalid input data" });
-    }
-
-    try {
-        const seats = await seat.findAll({
-            where: { showtimeId: id },
-        });
-        if (seats.length === 0)
-            return res.status(404).json({ error: "showtimeId not found" });
-
-        await seat.destroy({ where: { showtimeId: id } });
-        res.json({ message: "seats were successfully deleted." });
-    } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
-    }
-});
+router.delete("/showtime/:id", authMiddleware, deleteSeats);
 
 module.exports = router;
