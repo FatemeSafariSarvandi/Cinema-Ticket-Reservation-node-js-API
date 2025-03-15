@@ -42,6 +42,15 @@ const addMovie = tryCatchHandler(async (req, res) => {
         throw new AppError("UNAUTHORIZED", "Unauthorized", 403);
 
     const { title, genre, duration, description } = req.body;
+    // Validate input data
+    if (
+        title.length === 0 ||
+        genre.length === 0 ||
+        duration.length === 0 ||
+        description.length === 0
+    ) {
+        throw new AppError("INVALID_INPUT", "Invalid input data", 400);
+    }
 
     const newMovie = await movie.create({
         title,

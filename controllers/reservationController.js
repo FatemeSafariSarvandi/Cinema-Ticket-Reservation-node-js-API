@@ -97,6 +97,15 @@ const deleteReservation = tryCatchReservationHandler(
             );
         }
 
+        // Check if the logged-in user is the owner of the reservation
+        if (reservation.userName !== req.user.userName) {
+            throw new AppError(
+                "RESERVATON_FORBIDDEN",
+                "You can only cancel your own reservations",
+                403
+            );
+        }
+
         // Get relevant showtime information
         const showtime = await Showtime.findByPk(reservation.showtimeId, {
             transaction,

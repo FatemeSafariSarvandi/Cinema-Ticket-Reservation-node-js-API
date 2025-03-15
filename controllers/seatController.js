@@ -79,7 +79,11 @@ const deleteSeats = tryCatchHandler(async (req, res) => {
         where: { showtimeId: id },
     });
     if (seats.length === 0)
-        throw new AppError("SEAT_NOT_FOUND", "showtimeId not found", 404);
+        throw new AppError(
+            "SEAT_NOT_FOUND",
+            "seats for this showtime not found",
+            404
+        );
 
     await seat.destroy({ where: { showtimeId: id } });
     res.status(201).json({ message: "seats were successfully deleted." });
