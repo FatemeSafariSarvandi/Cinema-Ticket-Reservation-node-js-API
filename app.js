@@ -6,6 +6,7 @@ const movieRoutes = require("./routes/movieRoutes");
 const showtimeRoutes = require("./routes/showtimeRoutes");
 const seatRoutes = require("./routes/seatRoutes");
 const reservationRoutes = require("./routes/reservationRoutes");
+const errorHandler = require("./middleware/error_handler");
 
 const app = express();
 app.use(express.json());
@@ -31,17 +32,18 @@ app.use("*", (req, res, next) => {
     });
 });
 
-app.use((err, req, res, next) => {
-    console.error("Error:", err.message);
+app.use(errorHandler);
+// app.use((err, req, res, next) => {
+//     console.error("Error:", err.message);
 
-    if (err.name === "SequelizeDatabaseError") {
-        return res
-            .status(400)
-            .json({ error: "Database error", details: err.message });
-    }
+//     if (err.name === "SequelizeDatabaseError") {
+//         return res
+//             .status(400)
+//             .json({ error: "Database error", details: err.message });
+//     }
 
-    res.status(500).json({ error: "Internal server error" });
-});
+//     res.status(500).json({ error: "Internal server error" });
+// });
 
 const PORT = process.env.APP_PORT || 4000;
 
