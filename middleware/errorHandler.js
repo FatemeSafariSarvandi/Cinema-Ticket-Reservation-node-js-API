@@ -2,6 +2,7 @@ const AppError = require("../utilities/appError");
 const { ValidationError, UniqueConstraintError } = require("sequelize");
 
 const errorHandler = (error, req, res, next) => {
+    console.log(error.message);
     if (error instanceof UniqueConstraintError) {
         return res
             .status(409)
@@ -14,7 +15,10 @@ const errorHandler = (error, req, res, next) => {
             .send({ errorCode: error.errorCode, message: error.message });
     }
 
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({
+        errorCode: "INTERNAL_SERVER_ERROR",
+        message: "An unexpected error occurred. Please try again later.",
+    });
 };
 
 module.exports = errorHandler;
