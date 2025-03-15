@@ -1,45 +1,47 @@
 const Reservation = require("../db/models/reservation");
 const seat = require("../db/models/seat");
 const Showtime = require("../db/models/showtime");
+const AppError = require("../utilities/appError");
+const {
+    tryCatchReservationHandler,
+} = require("../utilities/tryCatchReservationHandler");
 
-// Create a reservation
-const createReservation = async (req, res) => {
-    const { showtimeId, seatId } = req.body;
+const createReservation = tryCatchReservationHandler(
+    async (req, res, transaction) => {
+        const { showtimeId, seatId } = req.body;
 
-    // Validate input data
-    if (
-        !showtimeId ||
-        !seatId ||
-        isNaN(Number(showtimeId)) ||
-        isNaN(Number(seatId))
-    ) {
-        return res.status(400).json({ error: "Invalid input data" });
-    }
+        // Validate input data
+        if (
+            !showtimeId ||
+            !seatId ||
+            isNaN(Number(showtimeId)) ||
+            isNaN(Number(seatId))
+        ) {
+            throw new AppError("INVALID_INPUT", "Invalid input data", 400);
+        }
 
-    const transaction = await seat.sequelize.transaction(); //Start transaction
-    try {
         // Checking that the seat is in the "available" state and locked
         const availableSeat = await seat.findOne({
-            where: {
-                id: seatId,
-                showtimeId: showtimeId,
-                status: "available",
-            },
-            lock: transaction.LOCK.UPDATE, // Locking seats to prevent simultaneous reservation
+            where: { id: seatId, showtimeId, status: "available" },
+            lock: transaction.LOCK.UPDATE,
             transaction,
         });
 
         if (!availableSeat) {
-            await transaction.rollback(); // Cancel transaction if space is unavailable
-            return res
-                .status(400)
-                .json({ error: "Seat is not available for reservation" });
+            throw new AppError(
+                "RESERVATION_SEAT_NOT_AVAILABLE",
+                "Seat is not available for reservation",
+                400
+            );
         }
-
         // Get relevant showtime information
-        const showtime = await Showtime.findByPk(showtimeId);
+        const showtime = await Showtime.findByPk(showtimeId, { transaction });
         if (!showtime) {
-            return res.status(404).json({ error: "Showtime not found" });
+            throw new AppError(
+                "RESERVATON_SHOWTIME_NOT_FOUND",
+                "Showtime not found",
+                404
+            );
         }
 
         //Check if the current time is before the timeshow start time
@@ -49,11 +51,12 @@ const createReservation = async (req, res) => {
         );
 
         if (currentTime >= showtimeDateTime) {
-            return res.status(400).json({
-                error: "Cannot reservation after showtime has started",
-            });
+            throw new AppError(
+                "RESERVATION_CONFLICT",
+                "Cannot reservation after showtime has started",
+                409
+            );
         }
-
         // Update seat status to "reserved"
         await seat.update(
             { status: "reserved" },
@@ -66,41 +69,44 @@ const createReservation = async (req, res) => {
             { transaction }
         );
 
-        await transaction.commit();
-
         res.status(201).json({
-            message: "Seat successfully reserved",
+            message: "Seat reserved successfully",
             reservation,
         });
-    } catch (error) {
-        await transaction.rollback(); //In case of an error, we restore the database to its previous state.
-        res.status(500).json({ error: "Internal server error" });
     }
-};
+);
 
 // Cancel reservation
 
-const deleteReservation = async (req, res) => {
-    const { id } = req.params;
+const deleteReservation = tryCatchReservationHandler(
+    async (req, res, transaction) => {
+        const { id } = req.params;
 
-    // Validate input data
-    if (!id || isNaN(Number(id))) {
-        return res.status(400).json({ error: "Invalid input data" });
-    }
+        // Validate input data
+        if (!id || isNaN(Number(id))) {
+            throw new AppError("INVALID_ID", "Invalid id", 400);
+        }
 
-    const transaction = await seat.sequelize.transaction();
-
-    try {
         // Get reservation information
-        const reservation = await Reservation.findByPk(id);
+        const reservation = await Reservation.findByPk(id, { transaction });
         if (!reservation) {
-            return res.status(404).json({ error: "Reservation not found" });
+            throw new AppError(
+                "RESERVATON_NOT_FOUND",
+                "Reservation not found",
+                404
+            );
         }
 
         // Get relevant showtime information
-        const showtime = await Showtime.findByPk(reservation.showtimeId);
+        const showtime = await Showtime.findByPk(reservation.showtimeId, {
+            transaction,
+        });
         if (!showtime) {
-            return res.status(404).json({ error: "Showtime not found" });
+            throw new AppError(
+                "RESERVATON_SHOWTIME_NOT_FOUND",
+                "Showtime not found",
+                404
+            );
         }
 
         //Check if the current time is before the timeshow start time
@@ -110,28 +116,26 @@ const deleteReservation = async (req, res) => {
         );
 
         if (currentTime >= showtimeDateTime) {
-            return res.status(400).json({
-                error: "Cannot cancel reservation after showtime has started",
-            });
+            throw new AppError(
+                "RESERVATION_CONFLICT",
+                "Cannot cancel reservation after showtime has started",
+                409
+            );
         }
-
-        delete reservation;
-        await reservation.destroy();
 
         //Change seat status to "available"
         await seat.update(
             { status: "available" },
-            { where: { id: reservation.seatId } }
+            { where: { id: reservation.seatId }, transaction }
         );
-        await transaction.commit();
-        res.json({
+
+        await reservation.destroy({ transaction });
+
+        res.status(200).json({
             message: "Reservation cancelled and seat is now available",
         });
-    } catch (error) {
-        await transaction.rollback();
-        res.status(500).json({ error: "Internal server error" });
     }
-};
+);
 
 module.exports = {
     createReservation,

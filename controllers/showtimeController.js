@@ -128,7 +128,7 @@ const deleteShowTime = tryCatchHandler(async (req, res) => {
         throw new AppError("SHOWMOVIE_NOT_FOUND", "showtime not found", 404);
 
     await deletedshowtime.destroy();
-    res.status(204).json({ message: "The showtime was successfully deleted." });
+    res.status(200).json({ message: "The showtime was successfully deleted." });
 });
 
 module.exports = {

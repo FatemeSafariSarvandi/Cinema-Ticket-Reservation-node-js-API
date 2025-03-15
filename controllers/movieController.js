@@ -67,7 +67,7 @@ const deleteMovie = tryCatchHandler(async (req, res) => {
         throw new AppError("MOVIE_NOT_FOUND", "Movie not found", 404);
 
     await deletedMovie.destroy();
-    res.status(204).json({ message: "The movie was successfully deleted." });
+    res.status(200).json({ message: "The movie was successfully deleted." });
 });
 
 module.exports = {

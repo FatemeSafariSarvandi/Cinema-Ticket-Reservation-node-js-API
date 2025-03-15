@@ -8,6 +8,11 @@ const AppError = require("../utilities/appError");
 const register = tryCatchHandler(async (req, res) => {
     const { userName, name, email, password } = req.body;
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        throw new AppError("INVALID_INPUT", "Invalid email format", 400);
+    }
+
     //Password Hashing
     const hashedPassword = await bcrypt.hash(password, 10);
 
