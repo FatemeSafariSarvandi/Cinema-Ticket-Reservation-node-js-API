@@ -96,3 +96,9 @@ npm run dev
 2. **Click "Import"**
 3. **Select `cinema.postman_collection.json`**
 4. **Click "Run" to test the API**
+
+---
+
+## 📌 4. Database Modeling
+
+![Database](https://github.com/FatemeSafariSarvandi/Cinema-Ticket-Reservation-node-js-API/blob/master/image/uml%20diagram.png?raw=true)
