@@ -5,6 +5,38 @@ const AppError = require("../utilities/appError");
 const {
     tryCatchReservationHandler,
 } = require("../utilities/tryCatchReservationHandler");
+const { tryCatchHandler } = require("../utilities/tryCatchHandler");
+
+// Get
+const getReservation = tryCatchHandler(async (req, res) => {
+    const { id } = req.params;
+    if (!id || isNaN(Number(id))) {
+        throw new AppError(
+            "INVALID_ID",
+            "Invalid reservationId. It must be a valid number.",
+            400
+        );
+    }
+
+    const reservation = await Reservation.findByPk(id);
+    if (!reservation || reservation.length === 0) {
+        throw new AppError(
+            "RESERVATION_NOT_FOUND",
+            "reservation not found",
+            404
+        );
+    }
+    // Check if the logged-in user is the owner of the reservation
+    if (reservation.userName !== req.user.userName) {
+        throw new AppError(
+            "RESERVATON_FORBIDDEN",
+            "You can only cancel your own reservations",
+            403
+        );
+    }
+
+    res.status(200).json(reservation);
+});
 
 const createReservation = tryCatchReservationHandler(
     async (req, res, transaction) => {
@@ -147,6 +179,7 @@ const deleteReservation = tryCatchReservationHandler(
 );
 
 module.exports = {
+    getReservation,
     createReservation,
     deleteReservation,
 };
