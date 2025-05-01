@@ -24,7 +24,7 @@ A RESTful API for managing movie reservations, built with **Node.js, Express, Se
 ### **1.2. Clone the Repository and Install Dependencies**
 
 ```bash
-git clone https://github.com/your-repo/Cinema-Ticket-Reservation-node-js-API.git
+git clone https://github.com/FatemeSafariSarvandi/Cinema-Ticket-Reservation-node-js-API.git
 cd Cinema-Ticket-Reservation-node-js-API
 npm install
 ```
